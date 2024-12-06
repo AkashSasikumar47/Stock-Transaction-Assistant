@@ -36,8 +36,8 @@ model = "gpt-3.5-turbo-16k"
 # print(f"Thread ID: {thread_id}")
 
 # Hardcoded Assistant and Thread IDs
-assistant_id = "asst_k0HXPr5uAiy7qRe13C2KBkiL"
-thread_id = "thread_0moTYrXGuxVwzvIZon47EAii"
+assistant_id = "generated_assistant_id"
+thread_id = "generated_thread_id"
 
 # Send a user message to the assistant
 user_message = "Which items need to be reordered if the threshold is 50?"
