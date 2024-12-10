@@ -3,7 +3,7 @@
 This project demonstrates the creation and use of an AI assistant powered by OpenAI's API to analyze stock transaction data. The assistant can perform tasks such as identifying items to reorder, calculating total profit, and providing inventory insights.
 
 ## Features
-- Uses OpenAI's GPT-3.5 Turbo model.
+- Uses OpenAI's gpt-4o-mini Turbo model.
 - Handles stock transaction queries like reorder thresholds and profit analysis.
 - Interactive and customizable assistant.
 
@@ -34,4 +34,4 @@ This project demonstrates the creation and use of an AI assistant powered by Ope
 
 ## License
 
-This project is licensed under the MIT License. Feel free to use and modify it as needed.
+This project is licensed under the MIT License. Feel free to use and modify it as needed
