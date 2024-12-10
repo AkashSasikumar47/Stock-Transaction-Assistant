@@ -8,7 +8,7 @@ load_dotenv()
 
 # Set up OpenAI API client
 client = openai.OpenAI()
-model = "gpt-3.5-turbo-16k"
+model = "gpt-4o-mini"
 
 # # Create the assistant
 # assistant = client.beta.assistants.create(
