@@ -40,7 +40,7 @@ assistant_id = "generated_assistant_id"
 thread_id = "generated_thread_id"
 
 # Send a user message to the assistant
-user_message = "Which items need to be reordered if the threshold is 50?"
+user_message = "Can you make a simple PPT for the items present in the data in .pptx format and I can download??"
 message = client.beta.threads.messages.create(
     thread_id=thread_id, role="user", content=user_message
 )
@@ -49,32 +49,34 @@ message = client.beta.threads.messages.create(
 run = client.beta.threads.runs.create(
     thread_id=thread_id,
     assistant_id=assistant_id,
-    instructions="Please address the user as James Bond.",
+    instructions="Please address the user as Akash.",
 )
-
 
 # Function to wait for the run to complete
 def wait_for_run_completion(client, thread_id, run_id, sleep_interval=5):
-    """
-    Wait for a run to complete and print the elapsed time.
-    :param client: The OpenAI client object.
-    :param thread_id: The ID of the thread.
-    :param run_id: The ID of the run.
-    :param sleep_interval: Time in seconds to wait between checks.
-    """
     while True:
         try:
             run_status = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
+            logging.info(f"Run status: {run_status}")
             if run_status.completed_at:
                 elapsed_time = run_status.completed_at - run_status.created_at
                 print(f"Run completed in {elapsed_time}")
                 logging.info(f"Run completed in {elapsed_time}")
 
-                # Retrieve messages after the run completes
                 messages = client.beta.threads.messages.list(thread_id=thread_id)
-                last_message = messages.data[-1]
-                response = last_message["content"]
-                print(f"Assistant Response: {response}")
+                logging.info(f"Messages: {messages.data}")
+
+                if messages.data:
+                    last_message = messages.data[-1]
+
+                    if isinstance(last_message.content, list):
+                        response = ''.join([block.value for block in last_message.content if hasattr(block, 'value')])
+                    else:
+                        response = last_message.content.value
+
+                    print(f"Assistant Response: {response}")
+                else:
+                    print("No messages found.")
                 break
         except Exception as e:
             logging.error(f"An error occurred while retrieving the run: {e}")
@@ -82,7 +84,6 @@ def wait_for_run_completion(client, thread_id, run_id, sleep_interval=5):
 
         logging.info("Waiting for run to complete...")
         time.sleep(sleep_interval)
-
 
 # Wait for the run to complete
 wait_for_run_completion(client=client, thread_id=thread_id, run_id=run.id)
