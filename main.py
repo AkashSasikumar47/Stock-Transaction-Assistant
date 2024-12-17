@@ -4,91 +4,69 @@ import time
 import logging
 from datetime import datetime
 
+# Load environment variables from .env file
 load_dotenv()
 
 # Set up OpenAI API client
-client = openai.OpenAI()
+openai.api_key = "your_openai_api_key_here"  # Ensure your OpenAI API key is loaded correctly
+
+# Define the model to use
 model = "gpt-4o-mini"
 
-# # Create the assistant
-# assistant = client.beta.assistants.create(
-#     name="Stock Transaction Assistant",
-#     instructions="""
-#     You are an intelligent assistant that helps analyze stock transaction data. 
-#     You can calculate total profit, identify items to reorder based on thresholds, and provide inventory insights. 
-#     The data is in a tabular format with columns like 'Item', 'Stock', 'Price', 'Cost', 'Transactions'.
-#     """,
-#     model=model,
-# )
-# assistant_id = assistant.id
-# print(f"Assistant ID: {assistant_id}")
-
-# # Create a thread for user interactions
-# thread = client.beta.threads.create(
-#     messages=[
-#         {
-#             "role": "user",
-#             "content": "Which items need to be reordered if the threshold is 50?",
-#         }
-#     ]
-# )
-# thread_id = thread.id
-# print(f"Thread ID: {thread_id}")
-
-# Hardcoded Assistant and Thread IDs
+# Hardcoded Assistant and Thread IDs (replace these with actual generated values)
 assistant_id = "generated_assistant_id"
 thread_id = "generated_thread_id"
 
-# Send a user message to the assistant
-user_message = "Can you make a simple PPT for the items present in the data in .pptx format and I can download??"
-message = client.beta.threads.messages.create(
-    thread_id=thread_id, role="user", content=user_message
-)
+# Function to ask the assistant a question
+def ask_question(thread_id, assistant_id, question):
+    try:
+        # Send the user's question to the assistant thread
+        user_message = openai.beta.threads.messages.create(
+            thread_id=thread_id,
+            role="user",
+            content=question
+        )
 
-# Run the assistant
-run = client.beta.threads.runs.create(
-    thread_id=thread_id,
-    assistant_id=assistant_id,
-    instructions="Please address the user as Akash.",
-)
+        # Create a run for the assistant to process the user's question
+        run = openai.beta.threads.runs.create(
+            thread_id=thread_id,
+            assistant_id=assistant_id,
+            instructions="Please address the user as Akash."  # Customize instructions as needed
+        )
 
-# Function to wait for the run to complete
-def wait_for_run_completion(client, thread_id, run_id, sleep_interval=5):
-    while True:
-        try:
-            run_status = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
-            logging.info(f"Run status: {run_status}")
-            if run_status.completed_at:
-                elapsed_time = run_status.completed_at - run_status.created_at
-                print(f"Run completed in {elapsed_time}")
-                logging.info(f"Run completed in {elapsed_time}")
-
-                messages = client.beta.threads.messages.list(thread_id=thread_id)
-                logging.info(f"Messages: {messages.data}")
-
-                if messages.data:
-                    last_message = messages.data[-1]
-
-                    if isinstance(last_message.content, list):
-                        response = ''.join([block.value for block in last_message.content if hasattr(block, 'value')])
-                    else:
-                        response = last_message.content.value
-
-                    print(f"Assistant Response: {response}")
-                else:
-                    print("No messages found.")
+        # Poll for the run status until it's completed
+        while True:
+            run_status = openai.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
+            if run_status.status == "completed":
                 break
-        except Exception as e:
-            logging.error(f"An error occurred while retrieving the run: {e}")
-            break
+            time.sleep(2)
 
-        logging.info("Waiting for run to complete...")
-        time.sleep(sleep_interval)
+        # Retrieve all messages from the thread
+        messages = openai.beta.threads.messages.list(thread_id=thread_id)
 
-# Wait for the run to complete
-wait_for_run_completion(client=client, thread_id=thread_id, run_id=run.id)
+        # Extract the assistant's response from the messages
+        assistant_response = None
+        for msg in messages.data:
+            if msg.role == "assistant":
+                assistant_response = msg.content[0].text.value if msg.content else "No content found."
+                break
 
-# Retrieve and print run steps for debugging
-run_steps = client.beta.threads.runs.steps.list(thread_id=thread_id, run_id=run.id)
-if run_steps.data:
-    print(f"Steps---> {run_steps.data[0]}")
+        # Output the response
+        if assistant_response:
+            print(f"Your Question: {question}")
+            print(f"Assistant Response: {assistant_response}\n")
+        else:
+            print("No assistant response found.")
+    
+    except Exception as e:
+        # Log any errors that occur
+        logging.error(f"Error occurred: {e}")
+        print(f"An error occurred: {e}")
+
+# Main loop to continuously ask questions
+while True:
+    question = input("Ask your question (or type 'exit' to quit): ")
+    if question.lower() == "exit":
+        print("Session ended.")
+        break
+    ask_question(thread_id, assistant_id, question)
